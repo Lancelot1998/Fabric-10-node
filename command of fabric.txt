@@ -1,0 +1,71 @@
+npm run bench -- -c config.yaml -n fabric-ccp-node-mutual-tls.yaml
+
+npm run bench -- -c config.yaml -n fabric-ccp-go-mutual-tls.yaml
+
+npm run bench -- -c config.yaml -n fabric-ccp-go-mutual-tls-new-up.yaml
+
+npm run bench -- -c config-smallbank.yaml -n fabric-ccp-go-mutual-tls-new-up.yaml
+
+npm run bench -- -c config-new.yaml -n fabric-ccp-go-mutual-tls-new.yaml
+
+npm run bench -- -c config.yaml -n fabric-ccp-go-mutual-tls-new.yaml
+
+sudo find / -name ca.org1.example.com-cert.pem
+
+/root/fabric/.build/bin/cryptogen generate --config=./crypto-config.yaml
+
+docker-compose -f network/fabric-v1.1/2org2peergoleveldb/docker-compose-mutual-tls-new-up.yaml up -d;sleep 3s
+
+docker-compose -f network/fabric-v1.1/2org2peergoleveldb/docker-compose-mutual-tls-new-down.yaml up -d;sleep 3s
+
+docker-compose -f network/fabric-v1.1/2org2peergoleveldb/docker-compose-mutual-tls-new.yaml up -d;sleep 3s
+
+curl -sSL https://get.daocloud.io/daotools/set_mirror.sh | sh -s http://e523f129.m.daocloud.io
+
+sudo systemctl restart docker.service
+
+docker container ls
+docker ps
+docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q)
+
+docker-compose -f docker-compose-cli-new.yaml up -d && docker exec -it cli bash
+
+ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+
+peer channel create -o orderer.example.com:7050 -c mychannel -f ./crypto/mychannel.tx --tls true --cafile $ORDERER_CA
+
+peer channel join -b mychannel.block
+
+/root/fabric/.build/bin/configtxgen -profile OrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/Org1MSPanchors.tx -channelID mychannel -asOrg Org1MSP
+
+/root/fabric/.build/bin/configtxgen -profile OrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/Org2MSPanchors.tx -channelID mychannel -asOrg Org2MSP
+
+CORE_PEER_LOCALMSPID="Org1MSP" && CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt && CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp && CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+
+peer channel update -o orderer.example.com:7050 -c mychannel -f ./channel-artifacts/Org1MSPanchors.tx --tls true --cafile $ORDERER_CA
+
+CORE_PEER_LOCALMSPID="Org2MSP" && CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt && CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp && CORE_PEER_ADDRESS=peer0.org2.example.com:7051
+
+peer channel update -o orderer.example.com:7050 -c mychannel -f ./channel-artifacts/Org2MSPanchors.tx --tls true --cafile $ORDERER_CA
+
+cp /opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts/fabric/simple/go/simpletest.go ./ && cp /opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts/fabric/smallbank/smallbank.go ./ && cp /opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts/fabric/marbles/go/marbles.go ./ && cp /opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts/fabric/drm/drmtest.go ./
+
+peer chaincode install -n smallbank -v v0 -p ./
+
+peer chaincode install -n drm -v v0 -p ./
+
+peer chaincode install -n simple -v v0 -p ./
+
+peer chaincode install -n marbles -v v0 -p ./
+
+peer chaincode instantiate -o orderer.example.com:7050 --tls true --cafile $ORDERER_CA -C mychannel -n marbles -v v0 -c '{"Args":[]}' -P "OR ('Org1MSP.member','Org2MSP.member')"
+
+peer chaincode instantiate -o orderer.example.com:7050 --tls true --cafile $ORDERER_CA -C mychannel -n drm -v v0 -c '{"Args":[]}' -P "OR ('Org1MSP.member','Org2MSP.member')"
+
+peer chaincode instantiate -o orderer.example.com:7050 --tls true --cafile $ORDERER_CA -C mychannel -n simple -v v0 -c '{"Args":[]}' -P "OR ('Org1MSP.member','Org2MSP.member')"
+
+peer chaincode instantiate -o orderer.example.com:7050 --tls true --cafile $ORDERER_CA -C mychannel -n smallbank -v v0 -c '{"Args":[]}' -P "OR ('Org1MSP.member','Org2MSP.member')"
+
+node zoo-service.js -t start && node start-zoo-client.js -t fabric -n /root/caliper/fabric-ccp-go-mutual-tls-new-up.yaml -a "172.18.237.190:2181"
+
+node zoo-service.js -t start && node start-zoo-client.js -t fabric -n /root/caliper/fabric-ccp-go-mutual-tls-new.yaml -a "172.18.237.190:2181"
